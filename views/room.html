@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+  <head>
+    <title>IO chat</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <style>
+      body {
+        margin-top: 30px;
+      }
+      .well {
+        word-break: break-all;
+        word-wrap: break-word;
+      }
+      pre {
+        display: inline;
+        border: none
+      }
+      #private {
+        display: inherit;
+      }
+      .priv-name {
+        display:none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class = 'container'>
+      <div id='messageArea' class='row'>
+        <div class='col-md-4'>
+          <div class='well'>
+            <h3>Online Users</h3>
+            <ul class='list-group' id='users'></ul>
+          </div>
+        </div>
+        <div class='col-md-8'>
+          <div class='chat' id='chat'></div>
+
+          <form id='messageForm'>
+            <div class=form-group>
+              <label>Enter Message</label>
+              <textarea class='form-control' id='message'></textarea><br>
+              <input type='submit' class='btn btn-primary' value='Send Message'/>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> 
+    <script>
+      var ROOM = '{{ room }}';
+      var USER = '{{ user }}';
+      marked.setOptions({
+        renderer: new marked.Renderer(),
+        highlight: function(code) {
+          return require('highlight.js').highlightAuto(code).value;
+        },
+        pedantic: false,
+        gfm: true,
+        tables: true,
+        breaks: false,
+        sanitize: true,
+        smartLists: true,
+        smartypants: false,
+        xhtml: false
+      });
+      $(function () {
+        var socket = io();
+        $('#messageForm').submit(function(){
+          var msg = $('#message').val()
+          socket.emit('send message', {room: room, msg: msg});
+          console.log('msg: '+msg)
+          console.log('room: '+room)
+          $('#message').val('');
+          return false;
+        });
+        socket.emit('new user', {room: ROOM, user: USER});
+
+        socket.on('new message', function(msg){
+          var content = marked(msg.msg)
+          console.log('message incoming:'+content)
+          $('#chat').append('<div class="well"><strong>'+msg.user+'</strong>: <pre>'+content+'</pre></div>');
+        });
+
+        socket.on('get users', function(data){
+          var html = '';
+          for(let i = 0; i < data.length; i++){
+            html += '<li class="list-group-item">'+data[i]+'</li>';
+          }
+          $(users).html(html)
+        })
+        var url = new URL(location.href);
+        var room = url.searchParams.get('roomname') || 'main-room';
+        console.log(room);
+        socket.emit('join-room', room);
+      });
+    </script>
+  </body>
+</html>
