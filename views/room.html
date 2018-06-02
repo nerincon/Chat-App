@@ -49,8 +49,8 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> 
     <script>
-      var ROOM = '{{ room }}';
-      var USER = '{{ user }}';
+      var room = '{{ room }}';
+      var user = '{{ user }}';
       marked.setOptions({
         renderer: new marked.Renderer(),
         highlight: function(code) {
@@ -75,7 +75,7 @@
           $('#message').val('');
           return false;
         });
-        socket.emit('new user', {room: ROOM, user: USER});
+        socket.emit('new user', {room: room, user: user});
 
         socket.on('new message', function(msg){
           var content = marked(msg.msg)

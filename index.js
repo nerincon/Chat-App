@@ -19,7 +19,9 @@ app.use('/socket-io',
   express.static('node_modules/socket.io-client/dist'));
 
 app.get('/', function (req, res) {
-  res.render('index.html');
+  var username = req.query.username;
+  var roomname = req.query.roomname;
+  res.render('index.html', {user: username, room:roomname});
 });
 
 app.get('/privateroom/', function(req, res){
@@ -34,6 +36,14 @@ app.get('/privateroom/', function(req, res){
 io.on('connection', function(socket){
   var my_room;
 
+  // // ONLY FOR TESTING PURPOSES------------
+  // socket.on('testing', function(test){
+  //   console.log('trying to send test');
+  //   console.log(test);
+  //   var teststring = 'This is a testing string for verification';
+  //   io.emit('testing', {teststring});
+  // });
+
   connections.push(socket);
   console.log('Connected: %s sockets connected', connections.length);
 
@@ -45,25 +55,29 @@ io.on('connection', function(socket){
   });
 
   //New User
-  socket.on('new user', function(data){
-    socket.join(data.room);
-    my_room = data.room;
+  socket.on('new user', function({newUsername, room}) {
+    socket.join(room, function () {
+      console.log('ROOMS', socket.rooms);
+    });
+    console.log('room: '+room);
+    my_room = room;
     console.log('myRoom: '+ my_room);
-    if (!users[data.room]) {
-      users[data.room] =  [];
+    if (!users[room]) {
+      users[room] =  [];
+      console.log('Any rooms? '+users)
     }
-
-    console.log(users);
     
-    if(data.user in users[data.room]){
-      console.log(data)
+    if(newUsername in users[room]){
+      console.log('user: '+newUsername + ' already in room' + room)
       
     } else {
     
-    socket.username = data.user;
-    users[data.room].push(data.user);
-    console.log(users);
-    updateUsernames(data.room);
+    socket.username = newUsername;
+    users[room].push(newUsername);
+    console.log('user pushed into room: '+users[room]);
+    updateUsernames(room);
+    var teststring = 'This is a testing string for verification';
+    io.emit('new user', {users});
     }
   });
 

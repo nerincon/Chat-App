@@ -35,7 +35,8 @@
         <form action="/" method="GET" role="form" id='userForm' class="form-horizontal">
             <div class='form-group'>
               <label>Enter Username</label>
-              <input class='form-control' id='username'/><br>
+              <input class='form-control' name='username' id='username'/><br>
+              <input type='hidden' id="main-room" name='roomname'/><br>
               <input type='submit' class='btn btn-primary' value='Login'/>
             </div>
           </form>
@@ -87,6 +88,23 @@
       });
       $(function () {
         var socket = io();
+
+        socket.on('connect', function (s) {
+          console.log('connected');
+      });
+
+        // // ONLY FOR TESTING PURPOSES------------
+        // $('#userForm').submit(function (){
+        //   socket.emit('testing', 'hello there testing');
+        // });
+        // socket.on('testing', function(msg){
+        //   console.log(msg.teststring);
+        //   console.log('Im testing on the client side');
+        // });
+
+        var room = '{{room}}';
+        var user = '{{ user }}';
+
         $('#messageForm').submit(function(){
           var msg = $('#message').val()
           socket.emit('send message', {room: room, msg: msg});
@@ -95,21 +113,43 @@
           $('#message').val('');
           return false;
         });
+
+        //socket.emit('new user', {room: room, user: user});
+
+
         socket.on('new message', function(msg){
           var content = marked(msg.msg)
-          $('#chat').append('<div class="well"><strong>'+data.user+'</strong>: <pre>'+content+'</pre></div>');
+          $('#chat').append('<div class="well"><strong>'+msg.user+'</strong>: <pre>'+content+'</pre></div>');
         });
-        $('#userForm').submit(function(){
-          $('#private-user').val($('#username').val());
-          socket.emit('new user', $('#username').val(), function(data){
-            if(data){
+
+        function userSubmitForm (evt) {
+          // prevent form submission
+          evt.preventDefault();
+
+          // get the new username
+          const newUsername = $('#username').val();
+          const room = 'main-room';
+          $('#private-user').val(newUsername);
+          $('#main-room').val(room);
+          console.log('ROOM: '+ room);
+          console.log('USER: '+ newUsername);
+          socket.emit('new user', {newUsername, room});
+          socket.on('new user', function (obj){
+            console.log('users come through? '+ obj)
+            if(newUsername){
               $('#userFormArea').hide();
               $('#messageArea').show();
             }
+            $('#username').val('');
           });
-          $('#username').val('');
-          return false;
-        });
+        }
+
+function addEvents () {
+  // all events are added here
+}
+
+        $('#userForm').submit(userSubmitForm)
+
         socket.on('get users', function(data){
           var html = '';
           for(let i = 0; i < data.length; i++){
@@ -121,7 +161,7 @@
           $('.priv-name').css('display','block');
         });
         var url = new URL(location.href);
-        var room = url.searchParams.get('roomname') || 'main-room';
+        var room = url.searchParams.get('roomname');
         console.log(room);
         socket.emit('join-room', room);
       });
