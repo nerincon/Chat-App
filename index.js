@@ -76,7 +76,6 @@ io.on('connection', function(socket){
     users[room].push(newUsername);
     console.log('user pushed into room: '+users[room]);
     updateUsernames(room);
-    var teststring = 'This is a testing string for verification';
     io.emit('new user', {users});
     }
   });
