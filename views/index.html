@@ -106,6 +106,11 @@
         var user = '{{ user }}';
 
         $('#messageForm').submit(function(){
+          if(!url.searchParams.get('roomname')){
+            var room = 'main-room';
+          } else {
+            var room = url.searchParams.get('roomname' || 'main-room');
+          }
           var msg = $('#message').val()
           socket.emit('send message', {room: room, msg: msg});
           console.log('msg: '+msg)
@@ -128,8 +133,13 @@
 
           // get the new username
           const newUsername = $('#username').val();
-          const room = 'main-room';
+          if(!url.searchParams.get('roomname')){
+            var room = 'main-room';
+          } else {
+            var room = url.searchParams.get('roomname' || 'main-room');
+          }
           $('#private-user').val(newUsername);
+          console.log('TEST: '+newUsername)
           $('#main-room').val(room);
           console.log('ROOM: '+ room);
           console.log('USER: '+ newUsername);
@@ -150,12 +160,13 @@ function addEvents () {
 
         $('#userForm').submit(userSubmitForm)
 
-        socket.on('get users', function(data){
+        socket.on('get users', function(users){
+          console.log('from index.html: '+users)
           var html = '';
-          for(let i = 0; i < data.length; i++){
-            html += '<li class="list-group-item">'+data[i]+'</li>';
+          for(let i = 0; i < users.length; i++){
+            html += '<li class="list-group-item">'+users[i]+'</li>';
           }
-          $(users).html(html)
+          $('#users').html(html)
         })
         $("#private").click(function() {
           $('.priv-name').css('display','block');

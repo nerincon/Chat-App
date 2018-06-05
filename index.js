@@ -28,8 +28,8 @@ app.get('/privateroom/', function(req, res){
   var roomname = req.query.roomname;
   var username = req.query.username;
 
-  console.log(roomname);
-  console.log(username);
+  console.log('line31: '+roomname);
+  console.log('line32: '+username);
   res.render('room.html', {room: roomname, user: username});
 })
 
@@ -73,6 +73,7 @@ io.on('connection', function(socket){
     } else {
     
     socket.username = newUsername;
+    console.log('76: '+ newUsername)
     users[room].push(newUsername);
     console.log('user pushed into room: '+users[room]);
     updateUsernames(room);
@@ -98,8 +99,15 @@ io.on('connection', function(socket){
 });
 
 function updateUsernames(room) {
+  console.log("ROOM 101:"+ room)
+  console.log("USERS 102:", users)
   io.to(room).emit('get users', users[room]);
 }
+
+  // socket.on('get users', function(user){
+  //   console.log('from get users new: '+ user);
+  //   io.to(room).emit('testing', {teststring});
+  // });
 
 http.listen(8080, function () {
   console.log('Listening on port 8080');
